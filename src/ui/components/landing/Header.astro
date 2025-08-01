@@ -213,75 +213,85 @@ import DBImage from "@/assets/images/landing/dbLight.svg"
 <script type="module" is:inline data-astro-rerun>
   const inkeepButton = document.getElementById("inkeepButton");
 
-  // Create a new div element to hold the Inkeep modal and set its id and position
-  const inkeepDiv = document.createElement("div");
-  inkeepDiv.id = "inkeepModal";
-  inkeepDiv.style.position = "absolute";
-  document.body.appendChild(inkeepDiv);
-
-  const handleClose = () => {
-    inkeepWidget.render({
-      ...config,
-      isOpen: false,
-    });
-  };
-
-  const handleOpen = () => {
-    let themeName = localStorage.getItem("theme");
-    if (themeName === "system") {
-      themeName = window.matchMedia("(prefers-color-scheme: dark)").matches
-        ? "dark"
-        : "light";
+  // Wait for Inkeep to be available
+  function initInkeepModal() {
+    if (typeof Inkeep === 'undefined') {
+      setTimeout(initInkeepModal, 100);
+      return;
     }
-    inkeepWidget.render({
-      ...config,
-      isOpen: true,
-      baseSettings: {
-        ...config.properties.baseSettings,
-        theme: {
-          colorMode: {
-            forcedColorMode: themeName,
+
+    // Create a new div element to hold the Inkeep modal and set its id and position
+    const inkeepDiv = document.createElement("div");
+    inkeepDiv.id = "inkeepModal";
+    inkeepDiv.style.position = "absolute";
+    document.body.appendChild(inkeepDiv);
+
+    const handleClose = () => {
+      inkeepModalWidget.update({
+        ...config,
+        isOpen: false,
+      });
+    };
+
+    const handleOpen = () => {
+      let themeName = localStorage.getItem("theme");
+      if (themeName === "system") {
+        themeName = window.matchMedia("(prefers-color-scheme: dark)").matches
+          ? "dark"
+          : "light";
+      }
+      inkeepModalWidget.update({
+        ...config,
+        isOpen: true,
+        baseSettings: {
+          ...config.baseSettings,
+          theme: {
+            colorMode: {
+              forcedColorMode: themeName,
+            },
           },
         },
-      },
-    });
-  };
-  const config = {
-    stylesheetUrls: ["/inkeep-styles.css"],
-    componentType: "CustomTrigger", // required
-    targetElement: inkeepDiv, // required
-    properties: {
-      isOpen: false, // required
-      onClose: handleClose, // required
-      onOpen: undefined,
+      });
+    };
+    
+    const config = {
       baseSettings: {
-        apiKey: "4f4da4a5733032ef8ff23e3b7906954877fd0ee54d58d1e0",
-        integrationId: "clpbm8p9y002ns601vbbswj5i",
-        organizationId: "clog94xy50001s601yapu7swn",
+        apiKey: "YOUR_INKEEP_API_KEY", // TODO: Replace with new API key before PR
         organizationDisplayName: "Drizzle ORM",
         primaryBrandColor: "#FFFFFF",
         theme: {
           colorMode: {
             forcedColorMode: "dark",
           },
+          styles: [
+            {
+              key: 'inkeep-custom-styles',
+              type: 'link',
+              value: '/inkeep-styles.css'
+            }
+          ]
         },
       },
       modalSettings: {
-        defaultView: "AI_CHAT",
-        areOpenHotKeysDisabled: true,
+        defaultView: "CHAT",
       },
       aiChatSettings: {
-        botAvatarSrcUrl: "/svg/drizzle.svg",
+        aiAssistantAvatar: "/svg/drizzle.svg",
       },
-    },
-  };
+      targetElement: inkeepDiv,
+      isOpen: false,
+      onClose: handleClose,
+    };
 
-  // Embed the widget using the `Inkeep.embed()` function.
-  const inkeepWidget = Inkeep().embed(config);
+    // Initialize the modal widget
+    const inkeepModalWidget = Inkeep.ModalChat(config);
 
-  // Add event listener to open the Inkeep modal when the button is clicked
-  inkeepButton.addEventListener("click", handleOpen);
-  window.inkeepWidget = inkeepWidget;
+    // Add event listener to open the Inkeep modal when the button is clicked
+    inkeepButton.addEventListener("click", handleOpen);
+    window.inkeepModalWidget = inkeepModalWidget;
+  }
+
+  initInkeepModal();
 </script>
 
 <script src="./snake/index.ts"></script>

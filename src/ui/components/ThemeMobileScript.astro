@@ -25,8 +25,8 @@
       if(themeSelect) {
         themeSelect.value = theme;
       }
+            // Get theme name
       let themeName = "";
-
       if (theme === "system") {
         themeName = window.matchMedia("(prefers-color-scheme: dark)").matches
           ? "dark"
@@ -34,8 +34,21 @@
       } else {
         themeName = theme;
       }
-      if (window.inkeepWidget) {
-        window.inkeepWidget.render({
+      
+      // Update both widgets if they exist
+      if (window.inkeepModalWidget) {
+        window.inkeepModalWidget.update({
+          baseSettings: {
+            theme: {
+              colorMode: {
+                forcedColorMode: themeName,
+              },
+            },
+          },
+        });
+      }
+      if (window.inkeepSidebarWidget) {
+        window.inkeepSidebarWidget.update({
           baseSettings: {
             theme: {
               colorMode: {

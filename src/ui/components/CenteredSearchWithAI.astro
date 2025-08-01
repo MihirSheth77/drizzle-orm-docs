@@ -1,8 +1,10 @@
 <div class="nav_search-wrap">
   <div class="search-wrap--centered" id="docsearch"></div>
-  <div id="custom-button" class="nav_ai-btn"></div>
+  <button id="custom-button" class="nav_ai-btn" data-inkeep-sidebar-chat-trigger>
+    <span>Ask AI</span>
+  </button>
 </div>
-<script type="module" is:inline data-astro-rerun>
+<script type="module" is:inline>
   docsearch({
     container: '#docsearch',
     appId: "MXZNUT59HV",
@@ -11,46 +13,96 @@
     placeholder: "Search documentation...",
   });
 
-  let themeName = localStorage.getItem('theme');
-  if(themeName === 'system') {
-    themeName = window.matchMedia('(prefers-color-scheme: dark)').matches
-      ? 'dark'
-      : 'light';
-  }
+  function initInkeepSidebar() {
+    // Prevent multiple initializations
+    if (window.inkeepSidebarWidget) {
+      return;
+    }
+    
+    if (typeof Inkeep === 'undefined') {
+      setTimeout(initInkeepSidebar, 100);
+      return;
+    }
 
-  const properties = {
-    stylesheetUrls: ['/inkeep-styles.css'],
-    chatButtonType: 'ICON_TEXT',
-    isPositionFixed: false,
-    baseSettings: {
-      apiKey: '4f4da4a5733032ef8ff23e3b7906954877fd0ee54d58d1e0',
-      integrationId: 'clpbm8p9y002ns601vbbswj5i',
-      organizationId: 'clog94xy50001s601yapu7swn',
-      organizationDisplayName: 'Drizzle ORM',
-      primaryBrandColor: '#FFFFFF',
-      theme: {
-        colorMode: {
-          forcedColorMode: themeName,
+    // Check if container exists
+    const container = document.querySelector('#inkeep-sidebar-container');
+    if (!container) {
+      console.error('Inkeep sidebar container not found!');
+      return;
+    }
+    
+    // Check if button exists
+    const button = document.querySelector('[data-inkeep-sidebar-chat-trigger]');
+    if (!button) {
+      setTimeout(initInkeepSidebar, 100);
+      return;
+    }
+
+    try {
+      // Get current theme
+      let themeName = localStorage.getItem("theme");
+      if (themeName === "system") {
+        themeName = window.matchMedia("(prefers-color-scheme: dark)").matches
+          ? "dark"
+          : "light";
+      }
+      
+      // First parameter is the target selector
+      const inkeepWidget = Inkeep.SidebarChat('#inkeep-sidebar-container', {
+        baseSettings: {
+          apiKey: 'YOUR_INKEEP_API_KEY', // TODO: Replace with new API key before PR
+          primaryBrandColor: '#C8FF00', // Drizzle's green color
+          organizationDisplayName: 'Drizzle ORM',
+          theme: {
+            colorMode: {
+              forcedColorMode: themeName || 'dark',
+            },
+            styles: [
+              {
+                key: 'inkeep-custom-styles',
+                type: 'link',
+                value: '/inkeep-styles.css'
+              }
+            ]
+          },
         },
-      },
-    },
-    style: {visibility: 'visible'},
-    modalSettings: {
-      areOpenHotKeysDisabled: true,
-    },
-    aiChatSettings: {
-      botAvatarSrcUrl: '/svg/drizzle.svg',
+        aiChatSettings: {
+          aiAssistantAvatar: '/svg/drizzle.svg',
+          aiAssistantName: 'Drizzle AI',
+          aiGreeting: "Hi! I'm Drizzle AI. I'm here to help you with any questions about Drizzle ORM.",
+          exampleQuestions: [
+            "How do I get started with Drizzle?",
+            "What databases does Drizzle support?",
+            "How do I write migrations?",
+            "Show me how to use relations"
+          ],
+        },
+        triggerSelector: '[data-inkeep-sidebar-chat-trigger]',
+        position: 'right',
+        defaultOpen: false,
+        minWidth: 300,
+        maxWidth: 700,
+        defaultWidth: 450,
+        autoCloseThreshold: 0.7,
+      });
+
+      window.inkeepSidebarWidget = inkeepWidget;
+      
+      // Give the widget time to fully initialize
+      setTimeout(() => {
+        console.log('Inkeep sidebar ready');
+      }, 200);
+    } catch (error) {
+      console.error('Error initializing Inkeep sidebar:', error);
     }
   }
 
-  //@ts-ignore
-  const inkeepWidget = Inkeep().embed({
-    componentType: "ChatButton",
-    targetElement: document.getElementById("custom-button"),
-    properties,
-  });
-
-  window.inkeepWidget = inkeepWidget;
+  // Start initialization
+  if (document.readyState === 'loading') {
+    document.addEventListener('DOMContentLoaded', initInkeepSidebar);
+  } else {
+    initInkeepSidebar();
+  }
 </script>
 <style>
   .nav_search-wrap {
@@ -63,6 +115,11 @@
 
   html[class~=dark] .nav_ai-btn {
     background-color: #1c1c1c;
+    color: #fff;
+  }
+
+  html[class~=dark] .nav_ai-btn:hover {
+    background-color: #2a2a2a;
   }
 
   .nav_ai-btn {
@@ -70,6 +127,19 @@
     height: 33px;
     background-color: #F4F4F4;
     border-radius: 4px;
+    border: none;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 14px;
+    font-weight: 500;
+    color: #333;
+    transition: background-color 0.2s;
+  }
+
+  .nav_ai-btn:hover {
+    background-color: #e8e8e8;
   }
 
   @media screen and (max-width: 768px) {
